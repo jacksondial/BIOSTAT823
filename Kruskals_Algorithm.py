@@ -19,30 +19,61 @@
 
 # O(nlog(n))
 
-test_file = [
-    [1, 2, 4],
-    [1, 3, 2],
-    [1, 5, 3],
-    [3, 9, 2],
-    [9, 2, 1],
-    [2, 6, 2],
-    [2, 4, 5],
-    [5, 8, 3],
-    [8, 7, 1],
-    [8, 4, 3],
-    [4, 11, 2],
-    [8, 10, 2],
-    [10, 11, 3],
-]
-
-new_list = sorted(test_file, key=lambda x: x[2])
-
-print(new_list[11][2])  # should give me a 4
+# import pandas as pd
 
 
-def krus_alg(new_list: list[list[str]]) -> list[list[str]]:
+# def get_max_spanning_tree(input_filepath: str):
+#     """
+#     Implement Kruskal's algorithm.
+#     """
+#     data = pd.read_csv(input_filepath, header=None)
+#     data.sort_values(by=data.columns[2], ascending=False)
+#     print(data)
+#     print(data.loc[1])
+
+#     indexes_to_add = []
+#     df_length = len(data)
+#     for row in df_length:
+
+
+#     testing = data.loc[1][1]
+#     print(testing)
+#     return
+
+import csv
+
+
+def get_max_spanning_tree(input_filepath: str, output_filepath: str):
     """
-    Implement Kruskal's algorithm.
+    Implement Kruskal's Algorithm.
     """
-    for el in new_list:
-        
+    with open(input_filepath, "r") as read_obj:
+        csv_reader = csv.reader(read_obj)
+        total_edges = list(csv_reader)
+    for edge in total_edges:
+        edge[2] = int(edge[2])
+
+    sorted_total_edges = sorted(
+        sorted(sorted(total_edges, key=lambda x: x[1]), key=lambda x: x[0]),
+        key=lambda x: x[2],
+        reverse=True,
+    )
+    print(sorted_total_edges)
+
+    used_points = []
+    max_tree = []
+    for edge in sorted_total_edges:
+        if edge[1] not in used_points:
+            max_tree.append(edge)
+            used_points.append(edge[0])
+            used_points.append(edge[1])
+        else:
+            pass
+    print(max_tree)
+    
+    with open(output_filepath, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerows(max_tree)
+
+
+get_max_spanning_tree("hw1/test_graph1_input.csv", "hw1/max_tree.csv")
