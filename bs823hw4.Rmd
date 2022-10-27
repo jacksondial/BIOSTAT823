@@ -38,4 +38,42 @@ $$
 
 ## B
 
+```{r}
+two.sided.ci <- function(xbar, sigma, alpha, n){
+  zscore <- qnorm(1-alpha/2)
+  margin_of_error <- zscore * sigma / sqrt(n)
+  ub <- xbar + margin_of_error
+  lb <- xbar - margin_of_error
+  ci <- c(lb, ub)
+  return (ci)
+}
+```
+
+```{r}
+two.sided.ci(xbar = 3, sigma = 1.2, alpha = .05, n = 100)
+```
+
+
+## C
+
+To create a simulation study for empirical assessment of coverage probability using $N$ simulation replicates for the confidence interval estimator, I would sample many times from a normal distribution for the $\bar{x}$ value. I would calculate a CI for each of the sample means, and then check to see if the true value of the mean of my distribution was contained in the interval. I would calculate the percentage of confidence intervals that contain the true mean, and this would be my coverage probability.
+
+## D
+
+```{r}
+
+samps <- rnorm(25, 1, .25)
+for (samp in samps){
+  two.sided.ci()
+}
+
+```
+
+
+
+## E
+
+## F
+
+## G
 
