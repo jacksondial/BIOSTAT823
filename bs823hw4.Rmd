@@ -1,0 +1,41 @@
+---
+title: "bs823HW4"
+author: "Jackson Dial"
+date: '2022-10-27'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Problem 1
+
+## A
+
+$$
+Z = \sqrt{n}(\overline{X} - \mu)/\sigma \sim N(0,1)
+$$
+
+$$
+\text{since the distribution is symmetric: } z_{\alpha/2} = -z_{1-\alpha/2}
+$$
+$$
+1- \alpha = P[-z_{1-\alpha/2}< \sqrt{n}(\overline{X} - \mu)/\sigma<z_{1-\alpha/2}]
+$$
+
+$$
+= P[\overline{X} - z_{1-\alpha /2} \space \sigma/\sqrt{n} < \mu<\overline{X} + z_{1-\alpha/2} \space \sigma/\sqrt{n}]
+$$
+
+$$
+\text{It follows that a 100(1-} \alpha) \% \text{ CI for } \mu \text{ is given by: }
+$$
+
+$$
+(\bar{x} - z_{1-\alpha / 2} \space \sigma/\sqrt{n}, \bar{x} + z_{1-\alpha/2} \space \sigma \sqrt{n})
+$$
+
+## B
+
+
