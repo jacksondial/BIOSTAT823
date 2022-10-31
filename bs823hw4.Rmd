@@ -101,35 +101,39 @@ mean(cov_prob_vec2)
 ## E
 
 ```{r}
-two.sided.bootstrap <- function(xbar, pop_min, alpha, n, pop_max, sigma){
-  quant <- qunif(1-alpha/2, min = pop_min, max = pop_max )
-  margin_of_error <- quant * sigma / sqrt(n)
-  ub <- xbar + margin_of_error
-  lb <- xbar - margin_of_error
-  ci <- c(lb, ub)
+
+two.sided.boot <- function(data, alpha){
+  average = mean(data)
+  n = length(data)
+  ci = quantile(data, probs = c(alpha/2, 1-alpha/2))
   return (ci)
 }
+
+test = two.sided.boot(data = c(1,2,4,5,2), alpha = .05)
+test
+test[1]
 ```
 
 ```{r}
-two.sided.bootstrap(xbar = 3, pop_min = 1.2, alpha = .05, n = 100, pop_max = 5, sigma = 1.3)
+bootcov <- function(data, alpha, B){
+  quantile(replicate(B, mean(sample(data,1:length(data), replace = TRUE))), c(alpha/2, 1-alpha/2))
+}
+pop <- rnorm(25, 1, .25)
 
+
+
+bootcov(rnorm(5, 1, .025), .05, 1000L)
 ```
 
-
-
-## F
-
-To run a simulation study using bootstrap methods, I draw a sample N times where that sample consists of individual samples pulled from a population WITH REPLACEMENT. 
-
-## G
 
 ```{r}
 boot_cov_prob <- vector()
-pop <- runif(25, 0, 1)
+
 for (i in 1:10000){
-  samps = sample(pop, 1000, replace = TRUE)
- ci <-  two.sided.bootstrap(xbar = mean(samps), pop_min = min(samps), alpha = .05, n = 25, pop_max = max(samps), sigma = sd(samps))
+  # samps = sample(pop, 1000, replace = TRUE)
+  # ci <-  two.sided.boot(data = samps, alpha = .05)
+  pop <- rnorm(7, 1, .25)
+  ci <- bootcov(data = pop, alpha = .05, B = 1000L)
   if (1 < ci[1] | 1 > ci[2]){
     boot_cov_prob[i] = 0
   }
@@ -141,13 +145,14 @@ for (i in 1:10000){
 mean(boot_cov_prob)
 ```
 
-
 ```{r}
 boot_cov_prob2 <- vector()
-pop <- runif(50, 0, 1)
+
 for (i in 1:10000){
-  samps = sample(pop, 1000, replace = TRUE)
- ci <-  two.sided.bootstrap(xbar = mean(samps), pop_min = min(samps), alpha = .05, n = 50, pop_max = max(samps), sigma = sd(samps))
+  # samps = sample(pop, 1000, replace = TRUE)
+  # ci <-  two.sided.boot(data = samps, alpha = .05)
+  pop <- rnorm(50, 1, .25)
+  ci <- bootcov(data = pop, alpha = .05, B = 1000L)
   if (1 < ci[1] | 1 > ci[2]){
     boot_cov_prob2[i] = 0
   }
@@ -156,8 +161,19 @@ for (i in 1:10000){
   }
 }
 
-mean(boot_cov_prob)
+mean(boot_cov_prob2)
 ```
+
+
+
+
+## F
+
+To run a simulation study using bootstrap methods, I draw a sample N times where that sample consists of individual samples pulled from a population WITH REPLACEMENT. 
+
+## G
+
+
 # Question 2
 
 ## A
@@ -183,70 +199,25 @@ $$
 
 ## D
 
-```{r}
-set.seed(1281)
-n <- 100
-x <- runif(n, 0, 1)
-
-y <- 1 + 0.5 *x + rnorm(n, 0, 0.1)
-
-#plot(x, y, pch = 19, main = "Toy Data Set")
-
-mu = mean(y)
-sigma = sd(y)
-```
-
-```{python}
-import tensorflow as tf
-import tensorflow_probability as tfp
-
-model = tfp.distributions.Normal(loc=mu, scale=sigma)
-```
-
-
-```{python}
-import tensorflow as tf
-dtype = tf.float32
-X = tf.constant(r.x, dtype=dtype)
-Y = tf.constant(r.y, dtype=dtype)
-print(type(X))
-print(X.dtype)
-print(X.shape)
-# extract the first 5 tensors into numpy array
-print(X.numpy()[:5])
-```
-
-
 ```{python}
 import numpy as np
-pi = tf.constant(np.pi, dtype=dtype)
 
-@tf.function
-def ols_loglike(beta, sigma):
-    # xb (mu_i for each observation)
-    mu = tf.linalg.matvec(X, beta)
-    # this is normal pdf logged and summed over all observations
-    ll = - (X.shape[0]/2.)*tf.math.log(2.*pi*sigma**2) -\
-	    (1./(2.*sigma**2.))*tf.math.reduce_sum((Y-mu)**2., axis=-1)
-    return ll
+np.random.seed(34)
+n = 100
+x = np.random.normal(0,1,size=n)
+
+y = 1 + 0.5 * x + np.random.normal(0,.1,size = n)
+
+#plot(x, y, pch = 19, main = "Toy Data Set")
 ```
 
 
-```{python}
-ols_loglike(beta = [1., 1.], sigma=1.)
-```
-
-```{python}
-[funval, grads] = tfp.math.value_and_gradient(ols_loglike, [[1., 1.], 1.])
-print("Function Value: ", funval)
-print('Gradients on beta: \n', grads[0])
-print('Gradient on sigma: \n', grads[1])
-```
 ```{python}
 import numpy as np
 from scipy.integrate import quad
 from scipy.optimize import minimize_scalar
 import torch
+from torch.autograd import Variable
 from matplotlib import pyplot as plt
 import pandas as pd
 import math 
@@ -258,28 +229,33 @@ sample = np.random.normal(loc=5, scale=2, size=(1000, 1))
 
 ##### TENSORS
 # X = torch.tensor(sample, dtype=torch.float64, requires_grad=False) #sample tensor
-X = torch.tensor(np.array([r.y]), dtype = torch.float64, requires_grad = True)
-alpha_ = torch.tensor(np.array([0.5]) * N, dtype=torch.float64, requires_grad=True)
-beta_ = torch.tensor(np.array([0.5]) * N, dtype=torch.float64, requires_grad=True)
-sigma_ = torch.tensor(np.array([5]) * N, dtype=torch.float64, requires_grad=True) 
+Y = Variable(torch.from_numpy(y)).type(torch.FloatTensor)
+X = Variable(torch.from_numpy(x)).type(torch.FloatTensor)
+alpha_ = torch.tensor(np.array([0.5]), dtype=torch.float64, requires_grad=True)
+beta_ = torch.tensor(np.array([0.5]), dtype=torch.float64, requires_grad=True)
+sigma_ = Variable(torch.rand(1), requires_grad = True)
 
 ##### OPTMIZATION METHOD: SGD
 learning_rate = 0.0002
 OPT_OBJ = torch.optim.SGD([alpha_, beta_, sigma_], lr = learning_rate)
 
 ##### OPTIMAZTION METHOD
-for t in range(2000):
-    # NLL = X.size()[0]*s_.log()+((((X-mu_)/s_ ).pow(2))/2).sum() #negative likelihood UPDATE
-    NLL = X.size()[0]*(-N/2) * math.log(2*math.pi * sigma_^2) - (1/s*sigma_^2) * sum((r.y - alpha_ + X*beta_)^2)
+for t in range(1000):
+    NLL = (N/2) * math.log(2*math.pi * sigma_.pow(2)) + (1/2*sigma_.pow(2)) * ((Y - alpha_ - X*beta_).pow(2)).sum()
     OPT_OBJ.zero_grad()
     NLL.backward()
 
-    if t % 100 == 0:
-        print("Log_Likehood: {}; Estimate mu: {}; Estimate sigma: {}".format(NLL.data.numpy(), mu_.data.numpy(), s_.data.numpy()))
+    # if t % 100 == 0:
+    #     print("Log_Likehood: {}; Estimate mu: {}; Estimate sigma: {}".format(NLL.data.numpy(), mu_.data.numpy(), s_.data.numpy()))
 
     OPT_OBJ.step()
 
-print("True value of mu and sigma: {} e {}".format(5, 2))
+# print("True value of mu and sigma: {} e {}".format(5, 2))
+
+torch_alpha = alpha_.data.numpy()[0]
+torch_beta = beta_.data.numpy()[0]
+torch_var = sigma_.data.numpy()[0]**2
+
 ```
 
 
