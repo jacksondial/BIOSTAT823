@@ -191,11 +191,19 @@ Gradient Vector
 $$
 D_b \space l(b) = 
 
-\begin{bmatrix} \sum_{i=1}^n X_{1i}(y_i-b_1x_{i1} -b_2 x_{2i})\\ \sum_{i=1}^n X_{2i}(y_i-b_1x_{i1} -b_2 x_{2i}) \end{bmatrix}
+\begin{bmatrix}
+-\frac{2}{2\sigma^2}[\sum_{i=1}^ny_i  - n\alpha + \beta\sum_{i=1}^nx_i]
+\\ 
+-\frac{2}{2\sigma^2}[ \beta\sum_{i=1}^nx_i^2 +\alpha\sum_{i=1}^n-\sum_{i=1}^nx_iy_i]
+\\
+-\frac{n}{-2\sigma^2}+\frac{\sum_{i=1}^n (y_i-\alpha-\beta x_i)^2}{2\sigma^4}
+\end{bmatrix}
 $$
 
 
 ## C
+
+Find MLE of \alpha, \beta, \sigma^2
 
 ## D
 
@@ -236,12 +244,12 @@ beta_ = torch.tensor(np.array([0.5]), dtype=torch.float64, requires_grad=True)
 sigma_ = Variable(torch.rand(1), requires_grad = True)
 
 ##### OPTMIZATION METHOD: SGD
-learning_rate = 0.0002
+learning_rate = 0.00001
 OPT_OBJ = torch.optim.SGD([alpha_, beta_, sigma_], lr = learning_rate)
 
 ##### OPTIMAZTION METHOD
 for t in range(1000):
-    NLL = (N/2) * math.log(2*math.pi * sigma_.pow(2)) + (1/2*sigma_.pow(2)) * ((Y - alpha_ - X*beta_).pow(2)).sum()
+    NLL = (N/2) * math.log(2*math.pi * sigma_.pow(2)) + (1/2*sigma_.pow(2)) * sum(((Y - alpha_ - X*beta_).pow(2)))
     OPT_OBJ.zero_grad()
     NLL.backward()
 
@@ -265,8 +273,53 @@ $$
 
 ## E
 
+```{Rcpp}
+// [[Rcpp::depends(RcppEigen)]]
+// [[Rcpp::depends(RcppNumerical)]]
+
+#include <RcppNumerical.h>
+
+using namespace Numer;
+
+// f = 100 * (x2 - x1^2)^2 + (1 - x1)^2
+// True minimum: x1 = x2 = 1
+class MSE: public MFuncGrad
+{
+public:
+    double f_grad(Constvec& x, Refvec grad)
+    {
+        double t1 = x[1] - x[0] * x[0];
+        double t2 = 1 - x[0];
+        double t3 = 
+        grad[0] = -400 * x[0] * t1 - 2 * t2;
+        grad[1] = 200 * t1;
+        return 100 * t1 * t1 + t2 * t2;
+    }
+};
+
+// [[Rcpp::export]]
+Rcpp::List optim_test()
+{
+    Eigen::VectorXd x(2);
+    x[0] = -1.2;
+    x[1] = 1;
+    double fopt;
+    Rosenbrock f;
+    int res = optim_lbfgs(f, x, fopt);
+    return Rcpp::List::create(
+        Rcpp::Named("xopt") = x,
+        Rcpp::Named("fopt") = fopt,
+        Rcpp::Named("status") = res
+    );
+}
+
+
+```
+
+
 ## F
 
+Well, the pytorch way seems to be easier given that I actually know python, but other than that they are pretty similar in functionality.
 
 # Question 3
 
