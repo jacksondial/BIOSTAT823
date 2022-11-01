@@ -119,11 +119,14 @@ bootcov <- function(data, alpha, B){
   quantile(replicate(B, mean(sample(data,1:length(data), replace = TRUE))), c(alpha/2, 1-alpha/2))
 }
 pop <- rnorm(25, 1, .25)
-
-
-
 bootcov(rnorm(5, 1, .025), .05, 1000L)
 ```
+
+## F
+
+To run a simulation study using bootstrap methods, I draw a sample N times where that sample consists of individual samples pulled from a population WITH REPLACEMENT. 
+
+## G
 
 
 ```{r}
@@ -132,7 +135,7 @@ boot_cov_prob <- vector()
 for (i in 1:10000){
   # samps = sample(pop, 1000, replace = TRUE)
   # ci <-  two.sided.boot(data = samps, alpha = .05)
-  pop <- rnorm(7, 1, .25)
+  pop <- rnorm(25, 1, .25)
   ci <- bootcov(data = pop, alpha = .05, B = 1000L)
   if (1 < ci[1] | 1 > ci[2]){
     boot_cov_prob[i] = 0
@@ -165,15 +168,6 @@ mean(boot_cov_prob2)
 ```
 
 
-
-
-## F
-
-To run a simulation study using bootstrap methods, I draw a sample N times where that sample consists of individual samples pulled from a population WITH REPLACEMENT. 
-
-## G
-
-
 # Question 2
 
 ## A
@@ -189,21 +183,23 @@ $$
 Gradient Vector
 
 $$
+
 D_b \space l(b) = 
 
 \begin{bmatrix}
--\frac{2}{2\sigma^2}[\sum_{i=1}^ny_i  - n\alpha + \beta\sum_{i=1}^nx_i]
+\frac{1}{\sigma^2}[\sum_{i=1}^ny_i  - n\alpha + \beta\sum_{i=1}^nx_i]
 \\ 
--\frac{2}{2\sigma^2}[ \beta\sum_{i=1}^nx_i^2 +\alpha\sum_{i=1}^n-\sum_{i=1}^nx_iy_i]
+-\frac{1}{\sigma^2}[\beta\sum_{i=1}^nx_i^2 +\alpha\sum_{i=1}^n-\sum_{i=1}^nx_iy_i]
 \\
--\frac{n}{-2\sigma^2}+\frac{\sum_{i=1}^n (y_i-\alpha-\beta x_i)^2}{2\sigma^4}
+-\frac{n}{\sigma}+\frac{\sum_{i=1}^n (y_i-\alpha-\beta x_i)^2}{\sigma^3}
 \end{bmatrix}
+
 $$
 
 
 ## C
 
-Find MLE of \alpha, \beta, \sigma^2
+Find MLE of alpha, beta, sigma^2
 
 ## D
 
@@ -216,7 +212,7 @@ x = np.random.normal(0,1,size=n)
 
 y = 1 + 0.5 * x + np.random.normal(0,.1,size = n)
 
-#plot(x, y, pch = 19, main = "Toy Data Set")
+# plot(x, y, pch = 19, main = "Toy Data Set")
 ```
 
 
@@ -264,55 +260,60 @@ torch_alpha = alpha_.data.numpy()[0]
 torch_beta = beta_.data.numpy()[0]
 torch_var = sigma_.data.numpy()[0]**2
 
+print(torch_alpha)
+print(torch_beta)
+print(torch_var)
 ```
 
 
-$$
-L[{\alpha,\beta, \sigma^2}] = -\frac{n}{2}log(2\pi\sigma^2)-\frac{1}{2\sigma^2}\sum_{i=1} ^n (y_i -\alpha+X\beta)^2
-$$
-
 ## E
 
-```{Rcpp}
-// [[Rcpp::depends(RcppEigen)]]
-// [[Rcpp::depends(RcppNumerical)]]
-
-#include <RcppNumerical.h>
-
-using namespace Numer;
-
-// f = 100 * (x2 - x1^2)^2 + (1 - x1)^2
-// True minimum: x1 = x2 = 1
-class MSE: public MFuncGrad
-{
-public:
-    double f_grad(Constvec& x, Refvec grad)
-    {
-        double t1 = x[1] - x[0] * x[0];
-        double t2 = 1 - x[0];
-        double t3 = 
-        grad[0] = -400 * x[0] * t1 - 2 * t2;
-        grad[1] = 200 * t1;
-        return 100 * t1 * t1 + t2 * t2;
-    }
-};
-
-// [[Rcpp::export]]
-Rcpp::List optim_test()
-{
-    Eigen::VectorXd x(2);
-    x[0] = -1.2;
-    x[1] = 1;
-    double fopt;
-    Rosenbrock f;
-    int res = optim_lbfgs(f, x, fopt);
-    return Rcpp::List::create(
-        Rcpp::Named("xopt") = x,
-        Rcpp::Named("fopt") = fopt,
-        Rcpp::Named("status") = res
-    );
-}
-
+```{r}
+# 
+# /**/
+# My Rcpp still won't knit so I am commenting it out again :(
+# 
+# Just kidding, my file won't even Knit at all if I have an Rcpp chunk in it
+# 
+# // [[Rcpp::depends(RcppEigen)]]
+# // [[Rcpp::depends(RcppNumerical)]]
+# 
+# #include <RcppNumerical.h>
+# 
+# using namespace Numer;
+# 
+# // f = 100 * (x2 - x1^2)^2 + (1 - x1)^2
+# // True minimum: x1 = x2 = 1
+# class MSE: public MFuncGrad
+# {
+# public:
+#     double f_grad(Constvec& x, Refvec grad)
+#     {
+#         double t1 = x[1] - x[0] * x[0];
+#         double t2 = 1 - x[0];
+#         double t3 = 
+#         grad[0] = -400 * x[0] * t1 - 2 * t2;
+#         grad[1] = 200 * t1;
+#         return 100 * t1 * t1 + t2 * t2;
+#     }
+# };
+# 
+# // [[Rcpp::export]]
+# Rcpp::List optim_test()
+# {
+#     Eigen::VectorXd x(2);
+#     x[0] = -1.2;
+#     x[1] = 1;
+#     double fopt;
+#     Rosenbrock f;
+#     int res = optim_lbfgs(f, x, fopt);
+#     return Rcpp::List::create(
+#         Rcpp::Named("xopt") = x,
+#         Rcpp::Named("fopt") = fopt,
+#         Rcpp::Named("status") = res
+#     );
+# }
+# 
 
 ```
 
@@ -323,4 +324,24 @@ Well, the pytorch way seems to be easier given that I actually know python, but 
 
 # Question 3
 
+See other document for parts A & B
+
+## C
+
+```{r}
+bayeserror <- function(cc, n) {
+  x <- runif(n, 0, 4*cc)
+  etax <- x/(x+cc)
+  Y <- rbinom(n, 1, etax)
+  Yhat <- as.integer(etax > 0.5)
+  mean(Y!=Yhat)
+}
+
+bayeserror(.25, 10000)
+
+```
+Yay! We got the same value!!
+
 # Question 4
+
+See other document
